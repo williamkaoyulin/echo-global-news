@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ECHO Global 國際安全新聞雷達原型" />
+  <title>ECHO Global｜國際安全新聞雷達</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="advanced.css" />
+  <link rel="stylesheet" href="features.css?v=3" />
+  <link rel="stylesheet" href="mobile.css?v=1" />
+  <link rel="stylesheet" href="features2.css?v=2" />
+  <link rel="stylesheet" href="mobile2.css?v=1" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" id="homeNav" href="#" aria-label="ECHO Global 首頁">
+        <span class="brand-mark"><i></i><i></i><i></i></span>
+        <span><strong>ECHO</strong><small>GLOBAL INTELLIGENCE</small></span>
+      </a>
+
+      <nav aria-label="主要導覽">
+        <p class="nav-label">工作區</p>
+        <a class="nav-item active" href="#"><span>⌁</span>情報總覽</a>
+        <a class="nav-item" id="topicsNav" href="#watchlists"><span>◎</span>監測主題 <b id="topicCount">5</b></a>
+        <a class="nav-item" id="sourceNav" href="#coverage"><span>◫</span>來源覆蓋</a>
+        <a class="nav-item" id="savedNav" href="#"><span>⚑</span>重要標記 <b id="savedCount">0</b></a>
+        <p class="nav-label">系統</p>
+        <a class="nav-item" id="dailyBriefNav" href="#"><span>◴</span>每日簡報</a>
+        <a class="nav-item" id="settingsNav" href="#"><span>⚙</span>設定</a>
+      </nav>
+
+      <div class="coverage-card">
+        <span class="pulse"></span>
+        <div><strong>英語媒體訊號運作中</strong><small>全球來源 · 15 分鐘更新</small></div>
+      </div>
+      <div class="user"><span>國</span><div><strong>國防新聞中心</strong><small>分析員工作區</small></div><button id="userMenuBtn" aria-label="使用者選單">⋯</button></div>
+    </aside>
+
+    <main>
+      <header>
+        <div><p class="eyebrow">GLOBAL SITUATION ROOM</p><h1>國際安全新聞雷達</h1><p class="subtitle">鎖定全球英語媒體，搜尋並分析與國軍及區域安全相關的訊號。</p></div>
+        <div class="header-actions"><button class="icon-btn" id="notificationBtn" aria-label="通知">♢<span></span></button><button class="primary" id="briefBtn">＋ 建立每日簡報</button></div>
+      </header>
+      <div class="mobile-tools"><button id="mobileBriefBtn">◴ 簡報</button><button id="mobileSourcesBtn">◫ 來源</button><button id="mobileSavedBtn">★ 標記</button><button id="mobileSettingsBtn">⚙ 設定</button></div>
+
+      <section class="search-panel">
+        <form id="searchForm">
+          <label class="searchbox"><span>⌕</span><input id="searchInput" value="Taiwan military" placeholder="輸入英文關鍵字，可使用 AND、OR、引號..." /><kbd>↵</kbd></label>
+          <button class="search-btn">搜尋全球新聞</button>
+          <div class="date-range">
+            <label><span>開始日期</span><input type="date" id="dateFrom" required></label>
+            <span class="date-arrow">→</span>
+            <label><span>結束日期</span><input type="date" id="dateTo" required></label>
+            <span class="english-only">✓ 僅限英語媒體</span>
+          </div>
+        </form>
+        <div class="quick-filters" id="watchlists">
+          <span>監測主題</span>
+          <button class="chip manage-chip" id="manageTopicsBtn">＋ 自訂主題</button>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="情報摘要">
+        <article><div><small>區間內新聞</small><strong id="articleCount">5</strong></div><span class="trend up" id="volumeTrend">↗ 18%</span><p id="rangeCaption">最近 7 天</p></article>
+        <article><div><small>有新聞日期</small><strong id="countryCount">0</strong></div><span class="mini-globe">◎</span><p>所選搜尋期間</p></article>
+        <article><div><small>平均討論度</small><strong id="signalCount">86</strong></div><span class="trend warn">熱度指數</span><p>跨來源密度 × 時效</p></article>
+        <article><div><small>英語媒體來源</small><strong id="sourceCount">4</strong></div><span class="source-dots">● ● ●</span><p>結果皆可連至原文</p></article>
+      </section>
+
+      <section class="volume-card" aria-labelledby="volumeTitle">
+        <div class="section-head"><div><p class="eyebrow">MEDIA VOLUME</p><h2 id="volumeTitle">新聞聲量趨勢</h2><p>目前搜尋結果在所選期間的每日篇數</p></div><div class="volume-total"><strong id="peakValue">3</strong><span>單日最高</span></div></div>
+        <div class="volume-chart" id="volumeChart"></div>
+      </section>
+
+      <section class="content-grid">
+        <div class="feed">
+          <div class="section-head"><div><h2>最新情報流</h2><p id="resultLabel">英語媒體 · 依討論度與發布時間排序</p></div><div class="segmented"><button class="active" data-sort="hybrid">討論度</button><button data-sort="date">最新</button></div></div>
+          <div id="status" class="status" hidden></div>
+          <div id="articleList" class="article-list"></div>
+          <button class="load-more" id="loadMore">顯示更多情報</button>
+        </div>
+
+        <aside class="right-rail">
+          <section class="rail-card topic-card">
+            <div class="section-head compact"><div><p class="eyebrow">AI SIGNAL MAP</p><h3>今日熱門議題</h3></div><span>即時</span></div>
+            <div class="topic"><div><b>01</b><span><strong>台海軍事活動</strong><small>48 則報導</small></span></div><em style="--w:92%"></em></div>
+            <div class="topic"><div><b>02</b><span><strong>印太聯合演訓</strong><small>31 則報導</small></span></div><em style="--w:72%"></em></div>
+            <div class="topic"><div><b>03</b><span><strong>無人機與不對稱戰力</strong><small>24 則報導</small></span></div><em style="--w:58%"></em></div>
+            <div class="topic"><div><b>04</b><span><strong>國防預算與軍售</strong><small>19 則報導</small></span></div><em style="--w:45%"></em></div>
+          </section>
+
+          <section class="rail-card" id="coverage">
+            <div class="section-head compact"><div><p class="eyebrow">SOURCE COVERAGE</p><h3>媒體來源覆蓋</h3></div><button id="sourceViewAll">查看全部</button></div>
+            <div id="sourceList"></div>
+          </section>
+
+          <section class="brief-card"><span>⌁</span><h3>原文情報工作區</h3><p>保留可追溯的英語新聞來源，依時間、聲量與討論度快速篩選。</p><button id="guideBtn">查看搜尋語法 →</button></section>
+        </aside>
+      </section>
+    </main>
+  </div>
+  <div class="modal-backdrop" id="topicsModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="topicsTitle">
+      <div class="modal-head"><div><p class="eyebrow">WATCHLISTS</p><h2 id="topicsTitle">自訂監測主題</h2></div><button class="modal-close" data-close="topicsModal" aria-label="關閉">×</button></div>
+      <p class="modal-note">建立常用搜尋組合；資料只保存在這台瀏覽器。</p>
+      <form id="topicForm" class="modal-form"><input type="hidden" id="topicEditIndex" value=""><label>主題名稱<input id="topicName" maxlength="20" placeholder="例如：印太軍演" required></label><label>英文搜尋條件<input id="topicQuery" maxlength="300" placeholder='例如："Indo-Pacific" AND exercise' required></label><button class="primary" id="topicSubmitBtn" type="submit">新增主題</button></form>
+      <div class="saved-topics" id="savedTopics"></div>
+      <div class="modal-actions"><button id="resetTopicsBtn">還原預設主題</button></div>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="settingsModal" hidden>
+    <section class="modal small-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-head"><div><p class="eyebrow">PREFERENCES</p><h2 id="settingsTitle">網站設定</h2></div><button class="modal-close" data-close="settingsModal" aria-label="關閉">×</button></div>
+      <form id="settingsForm" class="modal-form stacked"><label>預設搜尋天數<select id="settingDays"><option value="7">最近 7 天</option><option value="30">最近 30 天</option><option value="90">最近 90 天</option></select></label><label>預設排序<select id="settingSort"><option value="hybrid">討論度優先</option><option value="date">最新優先</option></select></label><label>初始顯示篇數<select id="settingPageSize"><option value="5">5 篇</option><option value="10">10 篇</option><option value="20">20 篇</option></select></label><button class="primary" type="submit">儲存設定</button></form>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="briefModal" hidden>
+    <section class="modal brief-modal" role="dialog" aria-modal="true" aria-labelledby="briefTitle">
+      <div class="modal-head"><div><p class="eyebrow">DAILY BRIEF</p><h2 id="briefTitle">每日新聞簡報</h2></div><button class="modal-close" data-close="briefModal" aria-label="關閉">×</button></div>
+      <div id="briefContent" class="brief-content"></div>
+      <div class="modal-actions"><button id="copyBriefBtn">複製文字</button><button class="primary" id="printBriefBtn">列印／存成 PDF</button></div>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="sourcesModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="sourcesTitle"><div class="modal-head"><div><p class="eyebrow">SOURCE COVERAGE</p><h2 id="sourcesTitle">媒體來源覆蓋</h2></div><button class="modal-close" data-close="sourcesModal" aria-label="關閉">×</button></div><p class="modal-note">顯示目前搜尋結果各媒體的篇數；可套用來源篩選。</p><div id="sourcesContent" class="source-table"></div><div class="modal-actions"><button id="clearSourceFilter">顯示全部來源</button></div></section></div>
+  <div class="modal-backdrop" id="savedModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="savedTitle"><div class="modal-head"><div><p class="eyebrow">BOOKMARKS</p><h2 id="savedTitle">重要標記</h2></div><button class="modal-close" data-close="savedModal" aria-label="關閉">×</button></div><p class="modal-note">點新聞卡片的星號即可收藏；標記保存在這台瀏覽器。</p><div id="savedContent" class="saved-articles"></div></section></div>
+  <div class="toast" id="toast"></div>
+  <script src="app.js?v=5"></script>
+</body>
+</html>
