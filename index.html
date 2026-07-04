@@ -69,7 +69,6 @@
       <section class="stats" aria-label="情報摘要">
         <article><div><small>區間內新聞</small><strong id="articleCount">5</strong></div><span class="trend up" id="volumeTrend">↗ 18%</span><p id="rangeCaption">最近 7 天</p></article>
         <article><div><small>有新聞日期</small><strong id="countryCount">0</strong></div><span class="mini-globe">◎</span><p>所選搜尋期間</p></article>
-        <article><div><small>平均討論度</small><strong id="signalCount">86</strong></div><span class="trend warn">熱度指數</span><p>跨來源密度 × 時效</p></article>
         <article><div><small>英語媒體來源</small><strong id="sourceCount">4</strong></div><span class="source-dots">● ● ●</span><p>結果皆可連至原文</p></article>
       </section>
 
@@ -80,20 +79,14 @@
 
       <section class="content-grid">
         <div class="feed">
-          <div class="section-head"><div><h2>最新情報流</h2><p id="resultLabel">英語媒體 · 依討論度與發布時間排序</p></div><div class="segmented"><button class="active" data-sort="hybrid">討論度</button><button data-sort="date">最新</button></div></div>
+          <div class="section-head"><div><h2>最新情報流</h2><p id="resultLabel">外國英語媒體 · 依發布時間排序</p></div><span class="sort-note">最新優先</span></div>
           <div id="status" class="status" hidden></div>
           <div id="articleList" class="article-list"></div>
           <button class="load-more" id="loadMore">顯示更多情報</button>
         </div>
 
         <aside class="right-rail">
-          <section class="rail-card topic-card">
-            <div class="section-head compact"><div><p class="eyebrow">AI SIGNAL MAP</p><h3>今日熱門議題</h3></div><span>即時</span></div>
-            <div class="topic"><div><b>01</b><span><strong>台海軍事活動</strong><small>48 則報導</small></span></div><em style="--w:92%"></em></div>
-            <div class="topic"><div><b>02</b><span><strong>印太聯合演訓</strong><small>31 則報導</small></span></div><em style="--w:72%"></em></div>
-            <div class="topic"><div><b>03</b><span><strong>無人機與不對稱戰力</strong><small>24 則報導</small></span></div><em style="--w:58%"></em></div>
-            <div class="topic"><div><b>04</b><span><strong>國防預算與軍售</strong><small>19 則報導</small></span></div><em style="--w:45%"></em></div>
-          </section>
+          <section class="rail-card topic-card"><div class="section-head compact"><div><p class="eyebrow">RESULT TOPICS</p><h3>本次熱門議題</h3></div><span>搜尋結果</span></div><div id="topicInsights"></div></section>
 
           <section class="rail-card" id="coverage">
             <div class="section-head compact"><div><p class="eyebrow">SOURCE COVERAGE</p><h3>媒體來源覆蓋</h3></div><button id="sourceViewAll">查看全部</button></div>
@@ -117,7 +110,7 @@
   <div class="modal-backdrop" id="settingsModal" hidden>
     <section class="modal small-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="modal-head"><div><p class="eyebrow">PREFERENCES</p><h2 id="settingsTitle">網站設定</h2></div><button class="modal-close" data-close="settingsModal" aria-label="關閉">×</button></div>
-      <form id="settingsForm" class="modal-form stacked"><label>預設搜尋天數<select id="settingDays"><option value="7">最近 7 天</option><option value="30">最近 30 天</option><option value="90">最近 90 天</option></select></label><label>預設排序<select id="settingSort"><option value="hybrid">討論度優先</option><option value="date">最新優先</option></select></label><label>初始顯示篇數<select id="settingPageSize"><option value="5">5 篇</option><option value="10">10 篇</option><option value="20">20 篇</option></select></label><button class="primary" type="submit">儲存設定</button></form>
+      <form id="settingsForm" class="modal-form stacked"><label>預設搜尋天數<select id="settingDays"><option value="7">最近 7 天</option><option value="30">最近 30 天</option><option value="90">最近 90 天</option></select></label><label>初始顯示篇數<select id="settingPageSize"><option value="5">5 篇</option><option value="10">10 篇</option><option value="20">20 篇</option></select></label><button class="primary" type="submit">儲存設定</button></form>
     </section>
   </div>
   <div class="modal-backdrop" id="briefModal" hidden>
@@ -130,7 +123,8 @@
   <div class="modal-backdrop" id="sourcesModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="sourcesTitle"><div class="modal-head"><div><p class="eyebrow">SOURCE COVERAGE</p><h2 id="sourcesTitle">媒體來源覆蓋</h2></div><button class="modal-close" data-close="sourcesModal" aria-label="關閉">×</button></div><p class="modal-note">顯示目前搜尋結果各媒體的篇數；可套用來源篩選。</p><div id="sourcesContent" class="source-table"></div><div class="modal-actions"><button id="clearSourceFilter">顯示全部來源</button></div></section></div>
   <div class="modal-backdrop" id="savedModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="savedTitle"><div class="modal-head"><div><p class="eyebrow">BOOKMARKS</p><h2 id="savedTitle">重要標記</h2></div><button class="modal-close" data-close="savedModal" aria-label="關閉">×</button></div><p class="modal-note">點新聞卡片的星號即可收藏；標記保存在這台瀏覽器。</p><div id="savedContent" class="saved-articles"></div></section></div>
   <div class="modal-backdrop" id="workspaceModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="workspaceTitle"><div class="modal-head"><div><p class="eyebrow">SOURCE WORKSPACE</p><h2 id="workspaceTitle">原文情報工作區</h2></div><button class="modal-close" data-close="workspaceModal" aria-label="關閉">×</button></div><div id="workspaceContent" class="workspace-content"></div><div class="modal-actions"><button id="copyQueryBtn">複製目前查詢</button><button class="primary" id="applyDefenseQueryBtn">套用國防新聞範本</button></div></section></div>
+  <div class="modal-backdrop" id="topicArticlesModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="topicArticlesTitle"><div class="modal-head"><div><p class="eyebrow">TOPIC ARTICLES</p><h2 id="topicArticlesTitle">議題新聞</h2></div><button class="modal-close" data-close="topicArticlesModal" aria-label="關閉">×</button></div><div id="topicArticlesContent" class="saved-articles"></div></section></div>
   <div class="toast" id="toast"></div>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

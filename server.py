@@ -67,14 +67,18 @@ TRUSTED_PUBLISHERS={
     'army times','navy times','air force times','marine corps times','c4isrnet','national defense magazine'
 }
 TRUSTED_DOMAINS=('apnews.com','reuters.com','bbc.com','bbc.co.uk','cnn.com','theguardian.com','nytimes.com','washingtonpost.com','ft.com','bloomberg.com','cnbc.com','abcnews.go.com','cbsnews.com','nbcnews.com','foxnews.com','aljazeera.com','dw.com','france24.com','economist.com','time.com','newsweek.com','politico.com','axios.com','npr.org','pbs.org','defensenews.com','breakingdefense.com','military.com','usni.org','navalnews.com','thediplomat.com','asia.nikkei.com','janes.com','warontherocks.com','foreignpolicy.com','foreignaffairs.com','stripes.com','taskandpurpose.com','airandspaceforces.com','twz.com','thehill.com','independent.co.uk','news.sky.com','euronews.com','thetimes.com','telegraph.co.uk','wsj.com','usatoday.com','theconversation.com','semafor.com','taipeitimes.com','taiwannews.com.tw','focustaiwan.tw','rti.org.tw','scmp.com','japantimes.co.jp','kyodonews.net','nhk.or.jp','yna.co.kr','koreaherald.com','armytimes.com','navytimes.com','airforcetimes.com','marinecorpstimes.com','c4isrnet.com','nationaldefensemagazine.org')
+BLOCKED_PUBLISHERS=('taipei times','taiwan news','focus taiwan','central news agency','radio taiwan international','taiwanplus','taiwan plus','taiwan today','taiwan panorama','xinhua','global times','china daily','people’s daily','people\'s daily','cgtn','south china morning post','china news service','ecns')
+BLOCKED_DOMAINS=('taipeitimes.com','taiwannews.com.tw','focustaiwan.tw','rti.org.tw','cna.com.tw','taiwanplus.com','taiwantoday.tw','taiwan-panorama.com','mofa.gov.tw','xinhuanet.com','news.cn','globaltimes.cn','chinadaily.com.cn','people.cn','cgtn.com','scmp.com','ecns.cn')
 
 def trusted_publisher(name):
     normalized=re.sub(r'\s+',' ',str(name or '').strip().lower())
+    if any(normalized==p or normalized.startswith(p+' ') for p in BLOCKED_PUBLISHERS): return False
     return any(normalized==p or normalized.startswith(p+' ') for p in TRUSTED_PUBLISHERS)
 
 def trusted_domain(value):
     host=urlparse(str(value or '')).hostname or str(value or '')
     host=host.lower().removeprefix('www.')
+    if any(host==d or host.endswith('.'+d) for d in BLOCKED_DOMAINS): return False
     return any(host==d or host.endswith('.'+d) for d in TRUSTED_DOMAINS)
 
 def free_translate(text):
