@@ -119,12 +119,16 @@ def news_search(query, date_from, date_to):
     key=(query,date_from,date_to); cached=SEARCH_CACHE.get(key)
     if cached and time.time()-cached[0]<900: return cached[1]
     errors=[]
-    try: result=google_news_search(query,date_from,date_to)
-    except Exception as exc: errors.append(f'Google News: {exc}'); result=None
-    if not result or not result.get('articles'):
+    try:
+        # An empty article list is a valid search result, not a provider failure.
+        # Returning it immediately avoids a slow, unnecessary GDELT request and 429 errors.
+        result=google_news_search(query,date_from,date_to)
+    except Exception as exc:
+        errors.append(f'Google News: {exc}'); result=None
+    if result is None:
         try: result=gdelt_search(query,date_from,date_to)
         except Exception as exc: errors.append(f'GDELT: {exc}'); result=None
-    if not result or not result.get('articles'): raise RuntimeError('; '.join(errors) or 'No news found')
+    if result is None: raise RuntimeError('; '.join(errors) or 'News providers unavailable')
     SEARCH_CACHE[key]=(time.time(),result)
     if len(SEARCH_CACHE)>100: SEARCH_CACHE.pop(next(iter(SEARCH_CACHE)))
     return result
