@@ -53,6 +53,37 @@ def ai_enrich(title, content):
     return {'translation':str(data['translation'])[:400],'summary':str(data['summary'])[:1200]}
 
 SEARCH_CACHE={}
+TRANSLATION_CACHE={}
+TRUSTED_PUBLISHERS={
+    'ap news','associated press','reuters','bbc','bbc news','cnn','the guardian','the new york times',
+    'the washington post','financial times','bloomberg','cnbc','abc news','cbs news','nbc news','fox news',
+    'al jazeera','dw','france 24','the economist','time','newsweek','politico','axios','npr','pbs',
+    'defense news','breaking defense','military.com','usni news','naval news','the diplomat','nikkei asia',
+    'jane’s','janes','war on the rocks','foreign policy','foreign affairs','stars and stripes','task & purpose',
+    'air & space forces magazine','the war zone','the hill','the independent','sky news','euronews',
+    'the times','the telegraph','the wall street journal','usa today','the conversation','semafor',
+    'taipei times','taiwan news','focus taiwan','central news agency','radio taiwan international',
+    'south china morning post','the japan times','kyodo news','nhk world','yonhap news agency','the korea herald',
+    'army times','navy times','air force times','marine corps times','c4isrnet','national defense magazine'
+}
+TRUSTED_DOMAINS=('apnews.com','reuters.com','bbc.com','bbc.co.uk','cnn.com','theguardian.com','nytimes.com','washingtonpost.com','ft.com','bloomberg.com','cnbc.com','abcnews.go.com','cbsnews.com','nbcnews.com','foxnews.com','aljazeera.com','dw.com','france24.com','economist.com','time.com','newsweek.com','politico.com','axios.com','npr.org','pbs.org','defensenews.com','breakingdefense.com','military.com','usni.org','navalnews.com','thediplomat.com','asia.nikkei.com','janes.com','warontherocks.com','foreignpolicy.com','foreignaffairs.com','stripes.com','taskandpurpose.com','airandspaceforces.com','twz.com','thehill.com','independent.co.uk','news.sky.com','euronews.com','thetimes.com','telegraph.co.uk','wsj.com','usatoday.com','theconversation.com','semafor.com','taipeitimes.com','taiwannews.com.tw','focustaiwan.tw','rti.org.tw','scmp.com','japantimes.co.jp','kyodonews.net','nhk.or.jp','yna.co.kr','koreaherald.com','armytimes.com','navytimes.com','airforcetimes.com','marinecorpstimes.com','c4isrnet.com','nationaldefensemagazine.org')
+
+def trusted_publisher(name):
+    normalized=re.sub(r'\s+',' ',str(name or '').strip().lower())
+    return any(normalized==p or normalized.startswith(p+' ') for p in TRUSTED_PUBLISHERS)
+
+def trusted_domain(value):
+    host=urlparse(str(value or '')).hostname or str(value or '')
+    host=host.lower().removeprefix('www.')
+    return any(host==d or host.endswith('.'+d) for d in TRUSTED_DOMAINS)
+
+def free_translate(text):
+    text=str(text or '').strip()[:900]
+    if not text: return ''
+    params=urlencode({'client':'gtx','sl':'en','tl':'zh-TW','dt':'t','q':text})
+    req=Request('https://translate.googleapis.com/translate_a/single?'+params,headers={'User-Agent':'Mozilla/5.0 ECHOGlobal/1.0'})
+    with open_url(req,15) as res: result=json.load(res)
+    return ''.join(part[0] for part in (result[0] or []) if part and part[0]).strip()
 def google_news_search(query, date_from, date_to):
     inclusive_end=(datetime.strptime(date_to,'%Y-%m-%d')+timedelta(days=1)).strftime('%Y-%m-%d')
     rss_query=f'{query} after:{date_from} before:{inclusive_end}'
@@ -63,17 +94,19 @@ def google_news_search(query, date_from, date_to):
     for item in root.findall('./channel/item')[:100]:
         title=(item.findtext('title') or '').strip(); link=(item.findtext('link') or '').strip(); pub=(item.findtext('pubDate') or '').strip(); source=item.find('source')
         source_name=((source.text if source is not None else '') or 'English Media').strip()
+        source_url=((source.attrib.get('url') if source is not None else '') or '').strip()
         if title.endswith(' - '+source_name): title=title[:-(len(source_name)+3)].strip()
         try: seen=parsedate_to_datetime(pub).astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         except Exception: seen=''
-        if title and link: articles.append({'title':title,'url':link,'domain':source_name,'sourcecountry':source_name,'language':'English','seendate':seen,'socialimage':''})
-    return {'provider':'Google News RSS','articles':articles}
+        if title and link and trusted_publisher(source_name): articles.append({'title':title,'url':link,'publisherUrl':source_url,'domain':source_name,'sourcecountry':source_name,'language':'English','seendate':seen,'socialimage':'','verifiedPublisher':True})
+    return {'provider':'Google News RSS · Trusted publishers','articles':articles}
 
 def gdelt_search(query, date_from, date_to):
     params=urlencode({'query':f'({query}) sourcelang:english','mode':'artlist','maxrecords':'100','format':'json','sort':'datedesc','startdatetime':date_from.replace('-','')+'000000','enddatetime':date_to.replace('-','')+'235959'})
     req=Request('https://api.gdeltproject.org/api/v2/doc/doc?'+params,headers={'User-Agent':'ECHOGlobal/1.0'})
     with open_url(req,25) as res: result=json.load(res)
-    result['provider']='GDELT';result['articles']=[a for a in result.get('articles',[]) if str(a.get('language','')).lower()=='english']
+    result['provider']='GDELT · Trusted publishers';result['articles']=[a for a in result.get('articles',[]) if str(a.get('language','')).lower()=='english' and trusted_domain(a.get('url') or a.get('domain'))]
+    for article in result['articles']: article['verifiedPublisher']=True; article['publisherUrl']='https://'+str(article.get('domain','')).removeprefix('www.')
     return result
 
 def news_search(query, date_from, date_to):
@@ -99,11 +132,20 @@ class Handler(SimpleHTTPRequestHandler):
         self.path=urlparse(self.path).path
         super().do_GET()
     def do_POST(self):
-        if self.path!='/api/search': self.send_error(404); return
+        if self.path not in {'/api/search','/api/translate'}: self.send_error(404); return
         try:
             length=min(int(self.headers.get('Content-Length','0')),10000)
             body=json.loads(self.rfile.read(length))
-            result=news_search(str(body.get('query','')).strip(),str(body.get('from','')),str(body.get('to','')))
+            if self.path=='/api/search':
+                result=news_search(str(body.get('query','')).strip(),str(body.get('from','')),str(body.get('to','')))
+            else:
+                title=str(body.get('title','')).strip()[:500]; source=str(body.get('source','')).strip()[:100]
+                if not title: raise ValueError('Missing title')
+                key=(title,source); result=TRANSLATION_CACHE.get(key)
+                if not result:
+                    translated=free_translate(title)
+                    result={'translation':translated,'summary':f'本則報導由 {source or "英語新聞媒體"} 發布，標題重點為：「{translated}」。免費模式未擷取付費牆後的全文，請開啟官方原文確認完整脈絡與細節。','mode':'free-machine-translation'}
+                    TRANSLATION_CACHE[key]=result
             data=json.dumps(result,ensure_ascii=False).encode()
             self.send_response(200); self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Content-Length',str(len(data)));self.end_headers();self.wfile.write(data)
         except Exception as exc:
