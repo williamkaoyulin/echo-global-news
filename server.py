@@ -1,5 +1,5 @@
 """ECHO Global server: static files and cached English-news search."""
-import json, os, re, socket, ipaddress, time, ssl, sys
+import json, os, re, socket, ipaddress, time, ssl, sys, threading
 import certifi
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -53,6 +53,8 @@ def ai_enrich(title, content):
     return {'translation':str(data['translation'])[:400],'summary':str(data['summary'])[:1200]}
 
 SEARCH_CACHE={}
+SEARCH_LOCKS={}
+SEARCH_LOCKS_GUARD=threading.Lock()
 TRANSLATION_CACHE={}
 TRUSTED_PUBLISHERS={
     'ap news','associated press','reuters','bbc','bbc news','cnn','the guardian','the new york times',
@@ -103,35 +105,37 @@ def google_news_search(query, date_from, date_to):
         try: seen=parsedate_to_datetime(pub).astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         except Exception: seen=''
         if title and link and trusted_publisher(source_name): articles.append({'title':title,'url':link,'publisherUrl':source_url,'domain':source_name,'sourcecountry':source_name,'language':'English','seendate':seen,'socialimage':'','verifiedPublisher':True})
-    return {'provider':'Google News RSS · Trusted publishers','articles':articles}
+    return {'provider':'Google News RSS · Trusted publishers','fetchedAt':datetime.now(timezone.utc).isoformat(),'articles':articles}
 
 def gdelt_search(query, date_from, date_to):
     params=urlencode({'query':f'({query}) sourcelang:english','mode':'artlist','maxrecords':'100','format':'json','sort':'datedesc','startdatetime':date_from.replace('-','')+'000000','enddatetime':date_to.replace('-','')+'235959'})
     req=Request('https://api.gdeltproject.org/api/v2/doc/doc?'+params,headers={'User-Agent':'ECHOGlobal/1.0'})
     with open_url(req,25) as res: result=json.load(res)
-    result['provider']='GDELT · Trusted publishers';result['articles']=[a for a in result.get('articles',[]) if str(a.get('language','')).lower()=='english' and trusted_domain(a.get('url') or a.get('domain'))]
+    result['provider']='GDELT · Trusted publishers';result['fetchedAt']=datetime.now(timezone.utc).isoformat();result['articles']=[a for a in result.get('articles',[]) if str(a.get('language','')).lower()=='english' and trusted_domain(a.get('url') or a.get('domain'))]
     for article in result['articles']: article['verifiedPublisher']=True; article['publisherUrl']='https://'+str(article.get('domain','')).removeprefix('www.')
     return result
 
 def news_search(query, date_from, date_to):
     if not query or len(query)>500 or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',date_from) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',date_to):
         raise ValueError('Invalid search parameters')
-    key=(query,date_from,date_to); cached=SEARCH_CACHE.get(key)
-    if cached and time.time()-cached[0]<900: return cached[1]
-    errors=[]
-    try:
-        # An empty article list is a valid search result, not a provider failure.
-        # Returning it immediately avoids a slow, unnecessary GDELT request and 429 errors.
-        result=google_news_search(query,date_from,date_to)
-    except Exception as exc:
-        errors.append(f'Google News: {exc}'); result=None
-    if result is None:
-        try: result=gdelt_search(query,date_from,date_to)
-        except Exception as exc: errors.append(f'GDELT: {exc}'); result=None
-    if result is None: raise RuntimeError('; '.join(errors) or 'News providers unavailable')
-    SEARCH_CACHE[key]=(time.time(),result)
-    if len(SEARCH_CACHE)>100: SEARCH_CACHE.pop(next(iter(SEARCH_CACHE)))
-    return result
+    key=(query,date_from,date_to)
+    with SEARCH_LOCKS_GUARD: lock=SEARCH_LOCKS.setdefault(key,threading.Lock())
+    with lock:
+        cached=SEARCH_CACHE.get(key)
+        if cached and time.time()-cached[0]<900: return cached[1]
+        errors=[]
+        try:
+            # An empty article list is a valid search result, not a provider failure.
+            result=google_news_search(query,date_from,date_to)
+        except Exception as exc:
+            errors.append(f'Google News: {exc}'); result=None
+        if result is None:
+            try: result=gdelt_search(query,date_from,date_to)
+            except Exception as exc: errors.append(f'GDELT: {exc}'); result=None
+        if result is None: raise RuntimeError('; '.join(errors) or 'News providers unavailable')
+        SEARCH_CACHE[key]=(time.time(),result)
+        if len(SEARCH_CACHE)>100: SEARCH_CACHE.pop(next(iter(SEARCH_CACHE)))
+        return result
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
