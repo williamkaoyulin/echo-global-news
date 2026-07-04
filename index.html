@@ -52,7 +52,7 @@
       <section class="search-panel">
         <form id="searchForm">
           <label class="searchbox"><span>⌕</span><input id="searchInput" value="Taiwan military" placeholder="輸入英文關鍵字，可使用 AND、OR、引號..." /><kbd>↵</kbd></label>
-          <button class="search-btn">搜尋全球新聞</button>
+          <div class="search-actions"><button class="search-btn" id="searchBtn">搜尋全球新聞</button><button type="button" class="search-help-btn" id="guideBtn">？ 搜尋語法</button></div>
           <div class="date-range">
             <label><span>開始日期</span><input type="date" id="dateFrom" required></label>
             <span class="date-arrow">→</span>
@@ -66,8 +66,11 @@
         </div>
       </section>
 
+      <section class="initial-state" id="initialState"><span>⌕</span><h2>輸入關鍵字，開始搜尋國際新聞</h2><p>你也可以直接選擇上方的監測主題；搜尋完成後才會顯示新聞、聲量與來源分析。</p></section>
+
+      <div id="resultsArea" hidden>
       <section class="stats" aria-label="情報摘要">
-        <article><div><small>區間內新聞</small><strong id="articleCount">5</strong></div><span class="trend up" id="volumeTrend">↗ 18%</span><p id="rangeCaption">最近 7 天</p></article>
+        <article><div><small>區間內新聞</small><strong id="articleCount">0</strong></div><span class="trend up" id="volumeTrend">—</span><p id="rangeCaption">尚未搜尋</p></article>
         <article><div><small>有新聞日期</small><strong id="countryCount">0</strong></div><span class="mini-globe">◎</span><p>所選搜尋期間</p></article>
         <article><div><small>英語媒體來源</small><strong id="sourceCount">4</strong></div><span class="source-dots">● ● ●</span><p>結果皆可連至原文</p></article>
       </section>
@@ -93,9 +96,9 @@
             <div id="sourceList"></div>
           </section>
 
-          <section class="brief-card"><span>⌁</span><h3>原文情報工作區</h3><p>檢查目前查詢、可信媒體來源與進階搜尋語法。</p><button id="guideBtn">開啟工作區 →</button></section>
         </aside>
       </section>
+      </div>
     </main>
   </div>
   <div class="modal-backdrop" id="topicsModal" hidden>
@@ -122,9 +125,10 @@
   </div>
   <div class="modal-backdrop" id="sourcesModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="sourcesTitle"><div class="modal-head"><div><p class="eyebrow">SOURCE COVERAGE</p><h2 id="sourcesTitle">媒體來源覆蓋</h2></div><button class="modal-close" data-close="sourcesModal" aria-label="關閉">×</button></div><p class="modal-note">顯示目前搜尋結果各媒體的篇數；可套用來源篩選。</p><div id="sourcesContent" class="source-table"></div><div class="modal-actions"><button id="clearSourceFilter">顯示全部來源</button></div></section></div>
   <div class="modal-backdrop" id="savedModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="savedTitle"><div class="modal-head"><div><p class="eyebrow">BOOKMARKS</p><h2 id="savedTitle">重要標記</h2></div><button class="modal-close" data-close="savedModal" aria-label="關閉">×</button></div><p class="modal-note">點新聞卡片的星號即可收藏；標記保存在這台瀏覽器。</p><div id="savedContent" class="saved-articles"></div></section></div>
-  <div class="modal-backdrop" id="workspaceModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="workspaceTitle"><div class="modal-head"><div><p class="eyebrow">SOURCE WORKSPACE</p><h2 id="workspaceTitle">原文情報工作區</h2></div><button class="modal-close" data-close="workspaceModal" aria-label="關閉">×</button></div><div id="workspaceContent" class="workspace-content"></div><div class="modal-actions"><button id="copyQueryBtn">複製目前查詢</button><button class="primary" id="applyDefenseQueryBtn">套用國防新聞範本</button></div></section></div>
+  <div class="modal-backdrop" id="workspaceModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="workspaceTitle"><div class="modal-head"><div><p class="eyebrow">SEARCH GUIDE</p><h2 id="workspaceTitle">搜尋語法教學</h2></div><button class="modal-close" data-close="workspaceModal" aria-label="關閉">×</button></div><div id="workspaceContent" class="workspace-content"></div><div class="modal-actions"><button id="copyQueryBtn">複製目前查詢</button><button class="primary" id="applyDefenseQueryBtn">套用國防新聞範本</button></div></section></div>
   <div class="modal-backdrop" id="topicArticlesModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="topicArticlesTitle"><div class="modal-head"><div><p class="eyebrow">TOPIC ARTICLES</p><h2 id="topicArticlesTitle">議題新聞</h2></div><button class="modal-close" data-close="topicArticlesModal" aria-label="關閉">×</button></div><div id="topicArticlesContent" class="saved-articles"></div></section></div>
+  <div class="loading-overlay" id="loadingOverlay" hidden role="status" aria-live="polite"><div class="loading-card"><span class="loading-spinner"></span><strong>正在搜尋國際新聞</strong><small id="loadingQuery">請稍候，正在掃描外國英語媒體…</small></div></div>
   <div class="toast" id="toast"></div>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
