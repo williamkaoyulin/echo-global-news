@@ -37,7 +37,7 @@
 
       <div class="coverage-card">
         <span class="pulse"></span>
-        <div><strong>英語媒體訊號運作中</strong><small>全球來源 · 15 分鐘更新</small></div>
+        <div><strong>英語新聞搜尋服務</strong><small>可信來源 · 搜尋快取 15 分鐘</small></div>
       </div>
       <div class="user"><span>國</span><div><strong>國防新聞中心</strong><small>分析員工作區</small></div><button id="userMenuBtn" aria-label="使用者選單">⋯</button></div>
     </aside>
@@ -83,7 +83,7 @@
       <section class="content-grid">
         <div class="feed">
           <div class="section-head"><div><h2>最新情報流</h2><p id="resultLabel">外國英語媒體 · 依發布時間排序</p></div><span class="sort-note">最新優先</span></div>
-          <div id="status" class="status" hidden></div>
+          <div id="status" class="status" role="status" aria-live="polite" hidden></div>
           <div id="articleList" class="article-list"></div>
           <button class="load-more" id="loadMore">顯示更多情報</button>
         </div>
@@ -129,6 +129,6 @@
   <div class="modal-backdrop" id="topicArticlesModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="topicArticlesTitle"><div class="modal-head"><div><p class="eyebrow">TOPIC ARTICLES</p><h2 id="topicArticlesTitle">議題新聞</h2></div><button class="modal-close" data-close="topicArticlesModal" aria-label="關閉">×</button></div><div id="topicArticlesContent" class="saved-articles"></div></section></div>
   <div class="loading-overlay" id="loadingOverlay" hidden role="status" aria-live="polite"><div class="loading-card"><span class="loading-spinner"></span><strong>正在搜尋國際新聞</strong><small id="loadingQuery">請稍候，正在掃描外國英語媒體…</small></div></div>
   <div class="toast" id="toast"></div>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
